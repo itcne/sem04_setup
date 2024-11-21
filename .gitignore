@@ -1,0 +1,6 @@
+secrets.yaml
+images/
+config*
+setup.log
+.env
+_out/

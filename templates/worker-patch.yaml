@@ -1,0 +1,72 @@
+---
+# Rockchip additions
+- op: add
+  path: /machine/kernel
+  value:
+    modules:
+      - name: rockchip-cpufreq
+
+# Define OS disk
+- op: replace
+  path: /machine/install/disk
+  value: /dev/mmcblk0
+
+- op: add
+  path: /machine/install/extraKernelArgs
+  value:
+    - irqchip.gicv3_pseudo_nmi=0
+
+# Specify custom installer image for extensions
+- op: replace
+  path: /machine/install/image
+  value: ghcr.io/cloud-native-engineering/sem04_setup/installer-arm64:v1.8.3
+
+# Time
+- op: add
+  path: /machine/time
+  value:
+    servers:
+      - time.cloudflare.com
+      - time.google.com
+    bootTimeout: 2m0s
+
+# Metrics
+- op: add
+  path: /machine/kubelet/extraArgs
+  value:
+    rotate-server-certificates: true
+
+# Longhorn
+- op: add
+  path: /machine/kubelet/extraMounts
+  value:
+    - destination: /var/mnt/longhorn
+      type: bind
+      source: /var/mnt/longhorn
+      options:
+        - bind
+        - rshared
+        - rw
+
+# Configure data disk for Longhorn
+- op: add
+  path: /machine/disks
+  value:
+    - device: /dev/nvme0n1
+      partitions:
+        - mountpoint: /var/mnt/longhorn
+
+# HugePages (for Longhorn)
+- op: add
+  path: /machine/sysctls
+  value:
+    vm.nr_hugepages: "1024"
+
+# Use DHCP for networking
+- op: add
+  path: /machine/network/interfaces
+  value:
+    - deviceSelector:
+        #driver: rk_gmac-dwmac
+        busPath: "fe1c0000.ethernet"
+      dhcp: true
