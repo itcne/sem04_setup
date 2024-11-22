@@ -62,6 +62,12 @@
   value:
     vm.nr_hugepages: "1024"
 
+# Cilium:
+- op: add
+  path: /cluster/network/cni
+  value:
+    name: none
+
 # Use DHCP for networking
 - op: add
   path: /machine/network/interfaces

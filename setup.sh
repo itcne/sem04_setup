@@ -2,7 +2,7 @@
 
 # ---------------------------------
 # Script Name: setup.sh
-# Description: This script automates the setup of Talos on Turing Pi nodes, including downloading images, installing nodes, and configuring Kubernetes.
+# Description: This script automates the setup of Talos on TuringPi 2 with 4 RK1 nodes, including downloading images, installing nodes, and configuring Kubernetes.
 # Usage: ./setup.sh [options]
 # Author: Yves Wetter
 # License: MIT
@@ -22,6 +22,7 @@ TALOS_ROLES=("controlplane" "controlplane" "worker" "worker")
 TALOS_CLUSTERNAME="turingpi"
 TALOS_VIP="192.168.40.4"
 TALOS_INSTALLER="ghcr.io/cloud-native-engineering/sem04_setup/installer-arm64:v1.8.3"
+Longhorn_MOUNT="/var/mnt/longhorn"
 
 # ---------------------------------
 
@@ -180,8 +181,10 @@ k8s() {
             yq -i e "del(.users[] | select(.name == \"admin@${TALOS_CLUSTERNAME}\"))" ~/.kube/config
             yq -i e "del(.contexts[] | select(.name == \"admin@${TALOS_CLUSTERNAME}\"))" ~/.kube/config
         fi
+        until nc -zw 3 ${TALOS_VIP} 6443; do sleep 3; log "INFO" "Waiting for controlplane to be available on $TALOS_VIP"; done
         talosctl kubeconfig --nodes ${TALOS_NODES[@]:0:1}
 
+        log "INFO" "Waiting for Kubernetes to be ready"
         kubectl wait nodes --for condition=Ready --all --timeout 5m0s
 
         log "INFO" "Kubernetes is ready!"
@@ -195,6 +198,13 @@ k8s() {
         done
         wait_for_all_talos_nodes
         log "INFO" "All nodes are ready with Kubernetes!"
+        setup_cilium
+        setup_argocd
+        log "INFO" "Add Kubelet serving certificate approver"
+        kubectl apply -f https://raw.githubusercontent.com/alex1989hu/kubelet-serving-cert-approver/main/deploy/standalone-install.yaml
+        log "INFO" "Add metrics-server"
+        kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+        log "INFO" "Setup completed!"
     else
         if [ ! -d $K8S_DIR ]; then
             log "ERROR" "No k8s directory found. Please run the script with --k8s option first."
@@ -236,6 +246,54 @@ wait_for_all_talos_nodes() {
         until nc -zw 3 ${TALOS_NODES[@]:$node:1} 50000; do sleep 3; printf '.'; done
         log "INFO" "Node ${HOSTNAMES[@]:$node:1} is ready!"
     done
+}
+
+setup_cilium(){
+    log "INFO" "Installing Cilium"
+    helm repo add cilium https://helm.cilium.io/
+    helm repo update cilium
+    CILIUM_LATEST=$(helm search repo cilium/cilium --versions --output yaml | yq '.[0].version')
+    log "INFO" "Installing Cilium $CILIUM_LATEST"
+    helm install cilium cilium/cilium \
+     --version ${CILIUM_LATEST} \
+     --namespace kube-system \
+     --set ipam.mode=kubernetes \
+     --set securityContext.capabilities.ciliumAgent="{CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID}" \
+     --set securityContext.capabilities.cleanCiliumState="{NET_ADMIN,SYS_ADMIN,SYS_RESOURCE}" \
+     --set cgroup.autoMount.enabled=false \
+     --set cgroup.hostRoot=/sys/fs/cgroup \
+     --set l2announcements.enabled=true \
+     --set kubeProxyReplacement=true \
+     --set loadBalancer.acceleration=native \
+     --set k8sServiceHost=127.0.0.1 \
+     --set k8sServicePort=7445 \
+     --set bpf.masquerade=true \
+     --set ingressController.enabled=true \
+     --set ingressController.default=true \
+     --set ingressController.loadbalancerMode=dedicated \
+     --set bgpControlPlane.enabled=true \
+     --set hubble.relay.enabled=true \
+     --set hubble.ui.enabled=true
+
+    log "INFO" "Waiting for Cilium to be ready"
+    kubectl wait pod \
+        --namespace kube-system \
+        --for condition=Ready \
+        --timeout 2m0s \
+        --all
+    log "INFO" "Cilium is ready!"
+}
+
+setup_argocd(){
+    log "INFO" "Installing ArgoCD"
+    kubectl create namespace argocd
+    kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+    kubectl wait pod \
+        --namespace argocd \
+        --for condition=Ready \
+        --timeout 2m0s \
+        --all
+    log "INFO" "ArgoCD installed"
 }
 
 # Function to prompt for confirmation
