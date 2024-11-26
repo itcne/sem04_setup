@@ -18,7 +18,7 @@ BASE_IMAGE="Talos"
 TALOS_VERSION="v1.8.3"
 FIRMWARE_URL="https://github.com/nberlee/talos/releases/download/$TALOS_VERSION/metal-arm64.raw.xz"
 TALOS_NODES=("node01.k8s.local" "node02.k8s.local" "node03.k8s.local" "node04.k8s.local")
-TALOS_ROLES=("controlplane" "controlplane" "worker" "worker")
+TALOS_ROLES=("controlplane" "controlplane" controlplane "worker")
 TALOS_CLUSTERNAME="turingpi"
 TALOS_VIP="192.168.40.4"
 TALOS_INSTALLER="ghcr.io/cloud-native-engineering/sem04_setup/installer-arm64:v1.8.3"
@@ -294,6 +294,13 @@ setup_argocd(){
         --timeout 2m0s \
         --all
     log "INFO" "ArgoCD installed"
+
+    log "INFO" "Adding resource exclusions to ArgoCD config"
+    kubectl patch configmap argocd-cm -n argocd --type merge -p '{
+        "data": {
+            "resource.exclusions": "[{\"apiGroups\": [\"cilium.io\"], \"kinds\": [\"CiliumIdentity\"], \"clusters\": [\"*\"]}]"
+        }
+    }'
 }
 
 # Function to prompt for confirmation
