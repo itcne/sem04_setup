@@ -15,13 +15,13 @@ IMAGE_DIR="images"
 K8S_DIR="config"
 TEMPLATE_DIR="templates"
 BASE_IMAGE="Talos"
-TALOS_VERSION="v1.8.3"
-FIRMWARE_URL="https://github.com/nberlee/talos/releases/download/$TALOS_VERSION/metal-arm64.raw.xz"
-TALOS_NODES=("node01.k8s.local" "node02.k8s.local" "node03.k8s.local" "node04.k8s.local")
+TALOS_VERSION="v1.9.0"
+FIRMWARE_URL="https://factory.talos.dev/image/85f683902139269fbc5a7f64ea94a694d31e0b3d94347a225223fcbd042083ae/$TALOS_VERSION/metal-arm64.raw.xz"
+TALOS_NODES=("node01.k8s.k8s.local" "node02.k8s.k8s.local" "node03.k8s.k8s.local" "node04.k8s.k8s.local")
 TALOS_ROLES=("controlplane" "controlplane" controlplane "worker")
 TALOS_CLUSTERNAME="turingpi"
 TALOS_VIP="192.168.40.4"
-TALOS_INSTALLER="ghcr.io/cloud-native-engineering/sem04_setup/installer-arm64:v1.8.3"
+#TALOS_INSTALLER="ghcr.io/cloud-native-engineering/sem04_setup/installer-arm64:v1.8.3"
 Longhorn_MOUNT="/var/mnt/longhorn"
 
 # ---------------------------------
@@ -270,7 +270,7 @@ setup_cilium(){
      --set bpf.masquerade=true \
      --set ingressController.enabled=true \
      --set ingressController.default=true \
-     --set ingressController.loadbalancerMode=dedicated \
+     --set ingressController.loadbalancerMode=shared \
      --set bgpControlPlane.enabled=true \
      --set hubble.relay.enabled=true \
      --set hubble.ui.enabled=true
