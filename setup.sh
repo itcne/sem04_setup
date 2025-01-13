@@ -21,7 +21,7 @@ TALOS_NODES=("node01.k8s.k8s.local" "node02.k8s.k8s.local" "node03.k8s.k8s.local
 TALOS_ROLES=("controlplane" "controlplane" controlplane "worker")
 TALOS_CLUSTERNAME="turingpi"
 TALOS_VIP="192.168.40.4"
-TALOS_INSTALLER="factory.talos.dev/installer/85f683902139269fbc5a7f64ea94a694d31e0b3d94347a225223fcbd042083ae:v1.9.0"
+TALOS_INSTALLER="factory.talos.dev/installer/85f683902139269fbc5a7f64ea94a694d31e0b3d94347a225223fcbd042083ae:$TALOS_VERSION"
 Longhorn_MOUNT="/var/mnt/longhorn"
 
 # ---------------------------------
