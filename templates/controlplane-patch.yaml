@@ -1,11 +1,4 @@
 ---
-# Rockchip additions
-- op: add
-  path: /machine/kernel
-  value:
-    modules:
-      - name: rockchip-cpufreq
-
 # Define OS disk
 - op: replace
   path: /machine/install/disk
@@ -19,7 +12,7 @@
 # Specify custom installer image for extensions
 - op: replace
   path: /machine/install/image
-  value: ghcr.io/cloud-native-engineering/sem04_setup/installer-arm64:v1.8.3
+  value: factory.talos.dev/installer/85f683902139269fbc5a7f64ea94a694d31e0b3d94347a225223fcbd042083ae:v1.9.1
 
 # Time
 - op: add
@@ -67,6 +60,11 @@
   path: /cluster/network/cni
   value:
     name: none
+
+- op: add
+  path: /cluster/proxy
+  value:
+    disabled: true
 
 # Use DHCP for networking
 - op: add
