@@ -21,7 +21,7 @@ TALOS_NODES=("node01.k8s.k8s.local" "node02.k8s.k8s.local" "node03.k8s.k8s.local
 TALOS_ROLES=("controlplane" "controlplane" controlplane "worker")
 TALOS_CLUSTERNAME="turingpi"
 TALOS_VIP="192.168.40.4"
-#TALOS_INSTALLER="ghcr.io/cloud-native-engineering/sem04_setup/installer-arm64:v1.8.3"
+TALOS_INSTALLER="factory.talos.dev/installer/85f683902139269fbc5a7f64ea94a694d31e0b3d94347a225223fcbd042083ae:v1.9.0"
 Longhorn_MOUNT="/var/mnt/longhorn"
 
 # ---------------------------------
@@ -218,7 +218,7 @@ k8s() {
                 --nodes ${TALOS_NODES[@]:$node_index:1} \
                 --insecure
             until nc -zw 3 ${TALOS_NODES[@]:$node_index:1} 50000; do sleep 3; log "INFO" "Waiting..."; done
-            log "INFO" "Upgrading ${TALOS_NODES[@]:$node:1} with extensions from ${INSTALLER}..."
+            log "INFO" "Upgrading ${TALOS_NODES[@]:$node_index:1} with extensions from ${TALOS_INSTALLER}..."
             talosctl upgrade \
                 --image ${TALOS_INSTALLER} \
                 --nodes ${TALOS_NODES[@]:$node_index:1} \
