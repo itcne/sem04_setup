@@ -1,0 +1,21 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: sem04-setup
+  title: "sem04-setup"
+  description: "Talos, Kubernetes, and ArgoCD setup for sem04 system"
+  tags:
+    - kubernetes
+    - argocd
+    - talos
+    - cilium
+    - longhorn
+  owner: Yves
+  links:
+    - url: https://github.com/Cloud-native-engineering/sem04_setup
+      title: GitHub Repository
+spec:
+  type: documentation
+  owner: Yves
+  lifecycle: production
+  system: sem04-system
