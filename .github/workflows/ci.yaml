@@ -60,7 +60,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install crane
-        uses: iarekylew00t/crane-installer@v3
+        uses: iarekylew00t/crane-installer@v4
 
       - name: Download Talos image
         uses: actions/download-artifact@v3
